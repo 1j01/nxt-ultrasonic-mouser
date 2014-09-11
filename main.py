@@ -1,5 +1,28 @@
 #!/usr/bin/env python
 
+# The interesting part is at the bottom!
+
+
+
+# Parse command line arguments
+
+import argparse
+
+parser = argparse.ArgumentParser(
+	description='Be awesome. NXT Ultrasonic Mouser',
+	formatter_class=argparse.RawTextHelpFormatter
+)
+
+parser.add_argument('-r', '--recalibrate', action='store_true', help='Recalibrate the sensor to the screen')
+parser.add_argument('-x', '--horizontal', action='store_true', help='Use horizontal mode (point sensor across screen to the right)')
+parser.add_argument('-c', '--clicky', action='store_true', help='Auto-click repeatedly while interacting')
+parser.add_argument('-b', '--bounds', action='store_true', help='Choose the on-screen bounds for auto-clicking')
+parser.add_argument('-w', '--swirly', action='store_true', help=';)')
+
+args = vars(parser.parse_args())
+
+# Set up mouse emulation
+
 from pymouse import PyMouse
 
 mouse = PyMouse()
@@ -8,21 +31,31 @@ sw, sh = mouse.screen_size()
 def mouse_move(x, y):
 	mouse.move(x, y)
 
-def mouse_release():
-	mx, my = mouse.position()
-	mouse.release(mx, my)
+def mouse_release(x = None, y = None):
+	
+	# Retrieving the mouse position for some reason causes "Communication bus error"s
+	if x is None or y is None:
+		x, y = mouse.position()
+	
+	mouse.release(x, y)
 
-'''
-import time
-import math
-tau = math.pi * 2
 
-for i in range(500):
-	x = int(math.sin(tau*i/100)*sw/3 + sw/2)
-	y = int(math.cos(tau*i/100)*sh/3 + sh/2)
-	mouse_move(x, y)
-	time.sleep(.01)
-'''
+#    ;)
+
+if args['swirly']:
+	import time
+	import math
+	tau = math.pi * 2
+
+	for i in range(500):
+		x = int(math.sin(tau*i/100)*sw/3 + sw/2)
+		y = int(math.cos(tau*i/100)*sh/3 + sh/2)
+		mouse_move(x, y)
+		time.sleep(.01)
+	
+	parser.exit()
+
+# Connect to the NXT
 
 import nxt.locator
 from nxt.sensor import *
@@ -34,9 +67,11 @@ if sock:
 	# Exit handler
 	
 	def exit_handler():
-		print 'Goodbye!'
+		print 'Disconnecting NXT socket'
 		sock.close()
+		print 'Releasing mouse'
 		mouse_release()
+		print 'All good things must come to a brutal end'
 	
 	import atexit
 	atexit.register(exit_handler)
@@ -78,13 +113,7 @@ if sock:
 	
 	import sys
 	
-	calibrate = not (ceiling_sample and top_sample and bottom_sample)
-	if len(sys.argv) > 1:
-		a = sys.argv[1]
-		if a is 'calibrate' or a is 'recalibrate':
-			calibrate = True
-	
-	if calibrate:
+	if args['recalibrate'] or not (ceiling_sample and top_sample and bottom_sample):
 	
 		print 'Begin calibration. Place the brick in front of your monitor with the Ultrasonic Sensor facing upwards.'
 	
@@ -104,8 +133,8 @@ if sock:
 		top_sample = ultrasonic.get_sample()
 		print 'Top of screen at', top_sample
 		
-		# Write the configuration to a file
 		
+		# Write the configuration to a file
 		# This is WAY more complicated than it needs to be.
 		try:
 			config.add_section('Calibration')
@@ -133,33 +162,46 @@ if sock:
     
     
     
-    # This is the actually interesting part
+    # This is the interesting part
 	
 	mouse_is_pressed = False
+	last_x = sw / 2
+	last_y = sh / 2
 	
 	while True:
 		current_sample = ultrasonic.get_sample()
 		
 		x = sw / 2
-		y = sh - (sh * (current_sample - bottom_sample) / top_sample)
+		y = sh / 2
+		
+		if args['horizontal']:
+			x = sw - (sw * (current_sample - bottom_sample) / top_sample)
+		else:
+			y = sh - (sh * (current_sample - bottom_sample) / top_sample)
 		
 		if current_sample < ceiling_sample - ceiling_threshold_sample:
-			print 'Recieved sample!', current_sample, '(Move mouse to y=%s)'%y
+			print current_sample, '(Move mouse to y=%s)' % y
 			
-			# mouse.move(x, y)
-			
-			if 100 < y < (sh - 100):
-				mouse.press(x, y)
-				mouse_is_pressed = True
+			if args['clicky']:
+				if 100 < y < (sh - 100):
+					mouse.press(x, y)
+					mouse_is_pressed = True
+				else:
+					mouse.release(x, y)
+					mouse_is_pressed = False
 			else:
-				mouse.release(x, y)
-				mouse_is_pressed = False
+				mouse.move(x, y)
+			
 		else:
-			# print 'Recieved sample!', current_sample, '(Near ceiling)'
+			# print current_sample, '(Near ceiling)'
+			
 			if mouse_is_pressed:
 				print 'Releasing mouse'
-				mouse_release()
+				mouse_release(last_x, last_y)
 				mouse_is_pressed = False
+		
+		last_x = x
+		last_y = y
 
 
 

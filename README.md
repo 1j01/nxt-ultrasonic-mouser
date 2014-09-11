@@ -32,8 +32,6 @@ Wow. You can however uninstall it without downloading anything else by going int
 
 ## Usage
 
-Warning! This thing presses the mouse button a lot really fast. TODO: only do this with a command-line option.
-
 It's not supposed to move the mouse when you're not interacting with it, but if it goes rouge, just turn off your NXT.
 
 1. Turn on the NXT and connect it to your computer. Duh.
@@ -42,10 +40,21 @@ It's not supposed to move the mouse when you're not interacting with it, but if 
 1. Connect the Ultrasonic sensor to port 4. (You'll probably want to attach it directly to the NXT brick)
 1. Calibration: Follow the instructions. If you want to use it sitting down, calibrate it by casually pointing to the top and bottom of the screen. To recalibrate, use `sudo python main.py recalibrate`
 
+```
+usage: main.py [-h] [-r] [-x] [-c] [-b]
+
+NXT Ultrasonic Mouser
+
+optional arguments:
+  -h, --help         show this help message and exit
+  -r, --recalibrate  Recalibrate the sensor to the screen
+  -x, --horizontal   Use horizontal mode (point sensor across screen to the right)
+  -c, --clicky       Auto-click repeatedly while interacting
+  -b, --bounds       Choose the on-screen bounds for auto-clicking
+
+```
 
 # Todo
-
-* Use `argparse`
 
 * Horizontal mode
 
