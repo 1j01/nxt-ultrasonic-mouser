@@ -1,23 +1,5 @@
 #!/usr/bin/env python
 
-'''
-import ctypes
-user32 = ctypes.windll.user32
-sw = screen_width = user32.GetSystemMetrics(0)
-sh = screen_height = user32.GetSystemMetrics(1)
-
-def mouse_move(x, y):
-	user32.SetCursorPos(x, y)
-
-def mouse_down():
-	ctypes.windll.user32.mouse_event(2, 0, 0, 0,0)
-
-def mouse_up():
-	ctypes.windll.user32.mouse_event(4, 0, 0, 0,0)
-
-'''
-
-import pymouse
 from pymouse import PyMouse
 
 mouse = PyMouse()
@@ -50,24 +32,23 @@ if sock:
 	brick = sock.connect()
 	
 	# Exit handler
-
-	import atexit
 	
 	def exit_handler():
 		print 'Goodbye!'
 		sock.close()
 		mouse_release()
-
+	
+	import atexit
 	atexit.register(exit_handler)
-
+	
 	# Info
 	
 	name, host, signal_strength, user_flash = brick.get_device_info()
 	print ''
-	print 'NXT brick name: %s' % name
-	print 'Host address: %s' % host
-	print 'Bluetooth signal strength: %s' % signal_strength
-	print 'Free user flash: %s' % user_flash
+	print 'NXT brick name:', name
+	print 'Host address:', host
+	print 'Bluetooth signal strength:', signal_strength
+	print 'Free user flash:', user_flash
 	print ''
 	print 'Okay!'
 	
@@ -108,15 +89,18 @@ if sock:
 	
 		raw_input('Press Enter when you have the Ultrasonic Sensor sensing the distance to the ceiling.')
 		ceiling_sample = ultrasonic.get_sample()
-		print 'Ceiling at %s' % ceiling_sample
+		print 'Ceiling at', ceiling_sample
+		
+		if ceiling_sample is 255:
+			print 'Warning: 255 means the distance is far away (which is generally good), but it can cause issues if it fluctuates between 255 and something like 143. If it moves your mouse to the top of the screen when you aren\'t interacting with it, recallibrate and see if you can get a lower number.'
 	
 		raw_input('Place your hand over the sensor level with the bottom of your screen. Press Enter.')
 		bottom_sample = ultrasonic.get_sample()
-		print 'Bottom of screen at %s' % bottom_sample
+		print 'Bottom of screen at', bottom_sample
 	
 		raw_input('Move your hand to the top of your screen. Press Enter to finish callibration.')
 		top_sample = ultrasonic.get_sample()
-		print 'Top of screen at %s' % top_sample
+		print 'Top of screen at', top_sample
 		
 		# Write the callibration configuration to a file
 		
@@ -138,7 +122,7 @@ if sock:
 	
 	# </Callibration>
 	
-	# This is the threshold below the recorded ceiling distance below which new samples are considered interaction-y
+	# The threshold below the recorded ceiling distance below which new samples are considered interaction
 	ceiling_threshold_sample = 30
     
     
@@ -166,14 +150,11 @@ if sock:
 				mouse.release(x, y)
 				mouse_is_pressed = False
 		else:
-			#print 'Recieved sample!', current_sample, '(Near ceiling)'
+			# print 'Recieved sample!', current_sample, '(Near ceiling)'
 			if mouse_is_pressed:
 				print 'Releasing mouse'
 				mouse_release()
 				mouse_is_pressed = False
-		
-	
-	
-# 	sock.close()
-# else:
-# 	print 'no sock, no brick; no brick, no fun'
+
+
+
