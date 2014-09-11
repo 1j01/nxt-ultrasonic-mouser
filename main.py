@@ -56,35 +56,37 @@ if sock:
 	
 	ultrasonic = UltrasonicSensor(brick, PORT_4)
 	
-	# <Callibration>
+	# <Calibration>
+	
+	config_file_name = 'config.ini'
 	
 	from ConfigParser import *
 
 	config = SafeConfigParser()
-	config.read('callibration.ini')
+	config.read(config_file_name)
 	
 	ceiling_sample = None
 	top_sample = None
 	bottom_sample = None
 	
 	try:
-		ceiling_sample = config.getint('Callibration', 'ceiling')
-		top_sample = config.getint('Callibration', 'top')
-		bottom_sample = config.getint('Callibration', 'bottom')
+		ceiling_sample = config.getint('Calibration', 'ceiling')
+		top_sample = config.getint('Calibration', 'top')
+		bottom_sample = config.getint('Calibration', 'bottom')
 	except Exception:
 		pass
 	
 	import sys
 	
-	callibrate = not (ceiling_sample and top_sample and bottom_sample)
+	calibrate = not (ceiling_sample and top_sample and bottom_sample)
 	if len(sys.argv) > 1:
 		a = sys.argv[1]
-		if (a == 'callibrate') or (a == 'recallibrate'):
-			callibrate = True
+		if a is 'calibrate' or a is 'recalibrate':
+			calibrate = True
 	
-	if callibrate:
+	if calibrate:
 	
-		print 'Begin callibration. Place the brick in front of your monitor with the Ultrasonic Sensor facing upwards.'
+		print 'Begin calibration. Place the brick in front of your monitor with the Ultrasonic Sensor facing upwards.'
 	
 	
 		raw_input('Press Enter when you have the Ultrasonic Sensor sensing the distance to the ceiling.')
@@ -92,35 +94,38 @@ if sock:
 		print 'Ceiling at', ceiling_sample
 		
 		if ceiling_sample is 255:
-			print 'Warning: 255 means the distance is far away (which is generally good), but it can cause issues if it fluctuates between 255 and something like 143. If it moves your mouse to the top of the screen when you aren\'t interacting with it, recallibrate and see if you can get a lower number.'
+			print 'Warning: 255 means the distance is far away (which is generally good), but it can cause issues if it fluctuates between 255 and something like 143. If it moves your mouse to the top of the screen when you aren\'t interacting with it, recalibrate and see if you can get a lower number.'
 	
 		raw_input('Place your hand over the sensor level with the bottom of your screen. Press Enter.')
 		bottom_sample = ultrasonic.get_sample()
 		print 'Bottom of screen at', bottom_sample
 	
-		raw_input('Move your hand to the top of your screen. Press Enter to finish callibration.')
+		raw_input('Move your hand to the top of your screen. Press Enter to finish calibration.')
 		top_sample = ultrasonic.get_sample()
 		print 'Top of screen at', top_sample
 		
-		# Write the callibration configuration to a file
+		# Write the configuration to a file
 		
 		# This is WAY more complicated than it needs to be.
 		try:
-			config.add_section('Callibration')
+			config.add_section('Calibration')
 		except DuplicateSectionError:
 			pass
 		
-		config.set('Callibration', 'ceiling', str(ceiling_sample))
-		config.set('Callibration', 'top', str(top_sample))
-		config.set('Callibration', 'bottom', str(bottom_sample))
-		# config['Callibration']['ceiling'] = ceiling_sample
-		# config['Callibration']['top'] = top_sample
-		# config['Callibration']['bottom'] = bottom_sample
-		with open('callibration.ini', 'w') as config_file:
+		config.set('Calibration', 'ceiling', str(ceiling_sample))
+		config.set('Calibration', 'top', str(top_sample))
+		config.set('Calibration', 'bottom', str(bottom_sample))
+		# config['Calibration']['ceiling'] = ceiling_sample
+		# config['Calibration']['top'] = top_sample
+		# config['Calibration']['bottom'] = bottom_sample
+		
+		with open(config_file_name, 'w') as config_file:
 			config.write(config_file)
+		
 		# That was ridiculously tedious
 	
-	# </Callibration>
+	# </Calibration>
+	
 	
 	# The threshold below the recorded ceiling distance below which new samples are considered interaction
 	ceiling_threshold_sample = 30
@@ -139,7 +144,7 @@ if sock:
 		y = sh - (sh * (current_sample - bottom_sample) / top_sample)
 		
 		if current_sample < ceiling_sample - ceiling_threshold_sample:
-			print 'Recieved sample!', current_sample, '(Move mouse to y =', y, ')'
+			print 'Recieved sample!', current_sample, '(Move mouse to y=%s)'%y
 			
 			# mouse.move(x, y)
 			

@@ -40,7 +40,7 @@ It's not supposed to move the mouse when you're not interacting with it, but if 
 1. Use `sudo python main.py`. (Without sudo I get `usb.USBError: could not set config 1: Operation not permitted`)
 1. You'll probably get a BrickNotFound error or something else. The BrickNotFound error can also mean some things aren't installed. Good luck.
 1. Connect the Ultrasonic sensor to port 4. (You'll probably want to attach it directly to the NXT brick)
-1. Callibration: Follow the instructions. If you want to use it sitting down, callibrate it by casually pointing to the top and bottom of the screen. To recallibrate, use `sudo python main.py recallibrate`
+1. Calibration: Follow the instructions. If you want to use it sitting down, calibrate it by casually pointing to the top and bottom of the screen. To recalibrate, use `sudo python main.py recalibrate`
 
 
 # Todo
