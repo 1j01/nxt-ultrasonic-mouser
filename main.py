@@ -209,7 +209,7 @@ if sock:
 		else:
 			y = screen_height - (screen_height * (current_sample - bottom_sample) / top_sample)
 		
-		if current_sample < ceiling_sample - ceiling_threshold_sample:
+		if current_sample < ceiling_sample - ceiling_threshold_sample and y > -500:
 			print current_sample, '(Move mouse to y=%s)' % y
 			
 			if args['clicky']:
