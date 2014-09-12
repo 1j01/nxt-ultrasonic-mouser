@@ -26,18 +26,45 @@ args = vars(parser.parse_args())
 from pymouse import PyMouse
 
 mouse = PyMouse()
-sw, sh = mouse.screen_size()
+screen_width, screen_height = mouse.screen_size()
+
+# Set up mouse abstraction
+
+mouse_is_pressed = False
+mouse_last_x = screen_width / 2
+mouse_last_y = screen_height / 2
+
+def mouse_coords(x = None, y = None):
+	
+	global mouse_last_x
+	global mouse_last_y
+	
+	if x is None or y is None:
+		# Retrieving the mouse position for some reason causes "Communication bus error"s
+		# x, y = mouse.position()
+		x = mouse_last_x
+		y = mouse_last_y
+	else:
+		mouse_last_x = x
+		mouse_last_y = y
+	
+	return x, y
 
 def mouse_move(x, y):
+	mouse_coords(x, y)
 	mouse.move(x, y)
 
+def mouse_press(x = None, y = None):
+	global mouse_is_pressed
+	x, y = mouse_coords(x, y)
+	mouse.press(x, y)
+	mouse_is_pressed = True
+
 def mouse_release(x = None, y = None):
-	
-	# Retrieving the mouse position for some reason causes "Communication bus error"s
-	if x is None or y is None:
-		x, y = mouse.position()
-	
+	global mouse_is_pressed
+	x, y = mouse_coords(x, y)
 	mouse.release(x, y)
+	mouse_is_pressed = False
 
 
 #    ;)
@@ -48,8 +75,8 @@ if args['swirly']:
 	tau = math.pi * 2
 
 	for i in range(500):
-		x = int(math.sin(tau*i/100)*sw/3 + sw/2)
-		y = int(math.cos(tau*i/100)*sh/3 + sh/2)
+		x = int(math.sin(tau*i/100)*screen_width/3 + screen_width/2)
+		y = int(math.cos(tau*i/100)*screen_height/3 + screen_height/2)
 		mouse_move(x, y)
 		time.sleep(.01)
 	
@@ -164,44 +191,35 @@ if sock:
     
     # This is the interesting part
 	
-	mouse_is_pressed = False
-	last_x = sw / 2
-	last_y = sh / 2
-	
 	while True:
+		
 		current_sample = ultrasonic.get_sample()
 		
-		x = sw / 2
-		y = sh / 2
+		x = screen_width / 2
+		y = screen_height / 2
 		
 		if args['horizontal']:
-			x = sw - (sw * (current_sample - bottom_sample) / top_sample)
+			x = screen_width - (screen_width * (current_sample - bottom_sample) / top_sample)
 		else:
-			y = sh - (sh * (current_sample - bottom_sample) / top_sample)
+			y = screen_height - (screen_height * (current_sample - bottom_sample) / top_sample)
 		
 		if current_sample < ceiling_sample - ceiling_threshold_sample:
 			print current_sample, '(Move mouse to y=%s)' % y
 			
 			if args['clicky']:
-				if 100 < y < (sh - 100):
-					mouse.press(x, y)
-					mouse_is_pressed = True
+				if 100 < y < (screen_height - 100):
+					mouse_press(x, y)
 				else:
-					mouse.release(x, y)
-					mouse_is_pressed = False
+					mouse_release(x, y)
 			else:
-				mouse.move(x, y)
+				mouse_move(x, y)
 			
 		else:
 			# print current_sample, '(Near ceiling)'
 			
 			if mouse_is_pressed:
 				print 'Releasing mouse'
-				mouse_release(last_x, last_y)
-				mouse_is_pressed = False
-		
-		last_x = x
-		last_y = y
+				mouse_release()
 
 
 
