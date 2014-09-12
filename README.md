@@ -58,7 +58,5 @@ optional arguments:
 
 * Horizontal mode
 
-* Recover from the occasional `nxt.error.DirProtError: Communication bus error`
-
 * Bluetooth instructions?
 

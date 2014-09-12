@@ -193,7 +193,13 @@ if sock:
 	
 	while True:
 		
-		current_sample = ultrasonic.get_sample()
+		try:
+			current_sample = ultrasonic.get_sample()
+		except nxt.error.DirProtError:
+			print '(!) nxt.error.DirProtError: Communication bus error'
+			brick = sock.connect()
+			print '($) Reconnected'
+			pass
 		
 		x = screen_width / 2
 		y = screen_height / 2
