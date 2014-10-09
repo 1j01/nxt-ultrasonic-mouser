@@ -49,31 +49,33 @@ It's not supposed to move the mouse when you're not interacting with it, but if 
 1. Calibration: Follow the instructions. If you want to use it sitting down, calibrate it by casually pointing to the top and bottom of the screen. To recalibrate, use `sudo python main.py --recalibrate`
 
 ```
-usage: sudo main.py [-h] [-r] [-x] [-c] [-b]
+usage: (sudo) main.py [-h] [-d {left,right,up,down}] [-r] [-c] [-b] [-w]
 
 NXT Ultrasonic Mouser
 
 optional arguments:
-  -h, --help         show this help message and exit
-  -r, --recalibrate  Recalibrate the sensor to the screen
-  -x, --horizontal   Use horizontal mode (point sensor across screen to the right)
-  -c, --clicky       Auto-click repeatedly while interacting
-  -b, --bounds       Choose the on-screen bounds for auto-clicking
+  -h, --help            show this help message and exit
+  -d {left,right,up,down}, --direction {left,right,up,down}
+                        the direction the sensor is pointing across the screen (default: up)
+  -r, --recalibrate     recalibrate the sensor to the screen
+  -c, --clicky          auto-click repeatedly while interacting
+  -b, --bounds          choose the on-screen bounds for auto-clicking
 
 ```
 
 # Todo
 
 * Fully support horizontal mode
-	
-	* From left / from right
-	
-	* Update calibration dialogue (most people don't have ceilings on their walls)
-	
+
 	* Seperate calibration configurations
+
 
 * Configure on-screen boundaries
 	
 	* Listen to mouse events to let the user draw a line to define the boundaries
 	
 	* Add to configuration (config.ini)
+
+
+* Smoothing
+

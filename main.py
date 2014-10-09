@@ -2,24 +2,38 @@
 
 # The interesting part is at the bottom!
 
-
+from __future__ import division,  print_function
 
 # Parse command line arguments
 
 import argparse
 
 parser = argparse.ArgumentParser(
-	description='Be awesome. NXT Ultrasonic Mouser',
+	description='NXT Ultrasonic Mouser',
 	formatter_class=argparse.RawTextHelpFormatter
 )
 
-parser.add_argument('-r', '--recalibrate', action='store_true', help='Recalibrate the sensor to the screen')
-parser.add_argument('-x', '--horizontal', action='store_true', help='Use horizontal mode (point sensor across screen to the right)')
-parser.add_argument('-c', '--clicky', action='store_true', help='Auto-click repeatedly while interacting')
-parser.add_argument('-b', '--bounds', action='store_true', help='Choose the on-screen bounds for auto-clicking')
+parser.add_argument('-d', '--direction', action='store', default='up', choices=['left', 'right', 'up', 'down'], help='the direction the sensor is pointing across the screen')
+parser.add_argument('-r', '--recalibrate', action='store_true', help='recalibrate the sensor to the screen')
+parser.add_argument('-c', '--clicky', action='store_true', help='auto-click repeatedly while interacting')
+parser.add_argument('-b', '--bounds', action='store_true', help='choose the on-screen bounds for auto-clicking')
 parser.add_argument('-w', '--swirly', action='store_true', help=';)')
 
 args = vars(parser.parse_args())
+
+closer_edge = {
+	'left': 'right',
+	'right': 'left',
+	'up': 'bottom',
+	'down': 'top'
+}[args['direction']]
+
+further_edge = {
+	'left': 'left',
+	'right': 'right',
+	'up': 'top',
+	'down': 'bottom'
+}[args['direction']]
 
 # Set up mouse emulation
 
@@ -28,7 +42,7 @@ from pymouse import PyMouse
 mouse = PyMouse()
 screen_width, screen_height = mouse.screen_size()
 
-# Set up mouse abstraction
+# Set up additional mouse abstraction
 
 mouse_is_pressed = False
 mouse_last_x = screen_width / 2
@@ -67,7 +81,7 @@ def mouse_release(x = None, y = None):
 	mouse_is_pressed = False
 
 
-#    ;)
+# ;)
 
 if args['swirly']:
 	import time
@@ -94,31 +108,29 @@ if sock:
 	# Exit handler
 	
 	def exit_handler():
-		print 'Disconnecting NXT socket'
+		print('Disconnecting NXT socket')
 		sock.close()
-		print 'Releasing mouse'
+		print('Releasing mouse')
 		mouse_release()
-		print 'All good things must come to a brutal end'
 	
 	import atexit
 	atexit.register(exit_handler)
 	
-	# Info
+	# Print brick info
 	
 	name, host, signal_strength, user_flash = brick.get_device_info()
-	print ''
-	print 'NXT brick name:', name
-	print 'Host address:', host
-	print 'Bluetooth signal strength:', signal_strength
-	print 'Free user flash:', user_flash
-	print ''
-	print 'Okay!'
+	print('')
+	print('NXT brick name:', name)
+	print('Host address:', host)
+	print('Bluetooth signal strength:', signal_strength)
+	print('Free user flash:', user_flash)
+	print('')
 	
 	# Ultrasonic Sensor
 	
 	ultrasonic = UltrasonicSensor(brick, PORT_4)
 	
-	# <Calibration>
+	# Calibration
 	
 	config_file_name = 'config.ini'
 	
@@ -128,104 +140,141 @@ if sock:
 	config.read(config_file_name)
 	
 	ceiling_sample = None
-	top_sample = None
-	bottom_sample = None
+	upper_sample = None
+	lower_sample = None
 	
 	try:
 		ceiling_sample = config.getint('Calibration', 'ceiling')
-		top_sample = config.getint('Calibration', 'top')
-		bottom_sample = config.getint('Calibration', 'bottom')
+		upper_sample = config.getint('Calibration', 'upper')
+		lower_sample = config.getint('Calibration', 'lower')
 	except Exception:
 		pass
 	
 	import sys
 	
-	if args['recalibrate'] or not (ceiling_sample and top_sample and bottom_sample):
-	
-		print 'Begin calibration. Place the brick in front of your monitor with the Ultrasonic Sensor facing upwards.'
-	
-	
-		raw_input('Press Enter when you have the Ultrasonic Sensor sensing the distance to the ceiling.')
-		ceiling_sample = ultrasonic.get_sample()
-		print 'Ceiling at', ceiling_sample
+	if args['recalibrate'] or not (ceiling_sample and upper_sample and lower_sample):
+		
+		print('Begin calibration.')
+		
+		def input_sample(prompt, display):
+			# Todo: interactive display until input
+			raw_input(prompt)
+			sample = ultrasonic.get_sample()
+			print(display.format(sample))
+			return sample
+		
+		ceiling_sample = input_sample('Press Enter to record the distance when you aren\'t interacting with the sensor.', 'Ceiling sample: {0}')
 		
 		if ceiling_sample is 255:
-			print 'Warning: 255 means the distance is far away (which is generally good), but it can cause issues if it fluctuates between 255 and something like 143. If it moves your mouse to the top of the screen when you aren\'t interacting with it, recalibrate and see if you can get a lower number.'
-	
-		raw_input('Place your hand over the sensor level with the bottom of your screen. Press Enter.')
-		bottom_sample = ultrasonic.get_sample()
-		print 'Bottom of screen at', bottom_sample
-	
-		raw_input('Move your hand to the top of your screen. Press Enter to finish calibration.')
-		top_sample = ultrasonic.get_sample()
-		print 'Top of screen at', top_sample
+			print('Warning: 255 means the distance is far away (which is good), but it can cause issues if it fluctuates between 255 and something much lower. If it moves your mouse to the edge of the screen when you aren\'t interacting with it, recalibrate and see if you can get a lower number.')
+		
+		lower_sample = input_sample('Place your hand over the sensor level with the %s edge of your screen. Press Enter.' % closer_edge, 'Lower sample: {0}')
+		
+		if lower_sample is 255:
+			print('Abort: 255 means the distance is out of range of your sensor (too far away!)')
+			sys.exit(1)
+		
+		upper_sample = input_sample('Move your hand to the %s edge of your screen. Press Enter to finish calibration.' % further_edge, 'Upper sample: {0}')
+		
+		if upper_sample is 255:
+			print('Abort: 255 means the distance is out of range of your sensor (too far away!)')
+			sys.exit(1)
+		
 		
 		
 		# Write the configuration to a file
-		# This is WAY more complicated than it needs to be.
 		try:
 			config.add_section('Calibration')
 		except DuplicateSectionError:
 			pass
 		
 		config.set('Calibration', 'ceiling', str(ceiling_sample))
-		config.set('Calibration', 'top', str(top_sample))
-		config.set('Calibration', 'bottom', str(bottom_sample))
-		# config['Calibration']['ceiling'] = ceiling_sample
-		# config['Calibration']['top'] = top_sample
-		# config['Calibration']['bottom'] = bottom_sample
+		config.set('Calibration', 'upper', str(upper_sample))
+		config.set('Calibration', 'lower', str(lower_sample))
 		
 		with open(config_file_name, 'w') as config_file:
 			config.write(config_file)
 		
-		# That was ridiculously tedious
-	
-	# </Calibration>
+	# End Calibration
 	
 	
-	# The threshold below the recorded ceiling distance below which new samples are considered interaction
+	# The threshold below the recorded ceiling distance within which new samples are also considered ceiling
 	ceiling_threshold_sample = 30
     
     
     
     
-    # This is the interesting part
+    # Here comes the interesting part
 	
 	while True:
 		
 		try:
 			current_sample = ultrasonic.get_sample()
 		except nxt.error.DirProtError:
-			print '(!) nxt.error.DirProtError: Communication bus error'
+			print('')
+			print('(!) nxt.error.DirProtError: Communication bus error')
 			brick = sock.connect()
-			print '($) Reconnected'
+			print('($) Reconnected')
+			print('')
 			pass
+		except KeyboardInterrupt:
+			print('')
+			sys.exit(0)
+		
+		
 		
 		x = screen_width / 2
 		y = screen_height / 2
 		
-		if args['horizontal']:
-			x = screen_width - (screen_width * (current_sample - bottom_sample) / top_sample)
-		else:
-			y = screen_height - (screen_height * (current_sample - bottom_sample) / top_sample)
+		# when current_sample = upper_sample, sample_ratio should = 1
+		# when current_sample = lower_sample, sample_ratio should = 0
+		sample_ratio = (current_sample - lower_sample) / (upper_sample - lower_sample)
 		
-		if current_sample < ceiling_sample - ceiling_threshold_sample and y > -500:
-			print current_sample, '(Move mouse to y=%s)' % y
+		if args['direction'] == 'left':
+			# Pointin' to da left
+			x = screen_width * (1 - sample_ratio)
+		elif args['direction'] == 'right':
+			# Pointin' to da right
+			x = screen_width * sample_ratio
+		elif args['direction'] == 'up':
+			# Pointing up
+			y = screen_height * (1 - sample_ratio)
+		else:
+			# Are you hanging this from the ceiling or something? Okay...
+			y = screen_height * sample_ratio
+		
+		
+		
+		def print_status(format_string):
+			text = format_string.format(
+				sample=current_sample,
+				us=upper_sample,
+				ls=lower_sample,
+				percent=int(sample_ratio*100),
+				x=int(x), y=int(y)
+			)
+			sys.stdout.write('\r\x1b[K' + text)
+			sys.stdout.flush()
+		
+		if current_sample < ceiling_sample - ceiling_threshold_sample:
+			
+			print_status('sample: {us} > ({sample}) > {ls}, {percent}%, move mouse to ({x}, {y})')
 			
 			if args['clicky']:
 				if 100 < y < (screen_height - 100):
 					mouse_press(x, y)
+					mouse_release(x, y)
 				else:
 					mouse_release(x, y)
 			else:
 				mouse_move(x, y)
 			
 		else:
-			# print current_sample, '(Near ceiling)'
+			
+			print_status('sample: {us} > ({sample}) > {ls}, {percent}%, (near ceiling)')
 			
 			if mouse_is_pressed:
-				print 'Releasing mouse'
 				mouse_release()
 
 
-
+
