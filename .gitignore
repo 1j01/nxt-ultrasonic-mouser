@@ -1,5 +1,18 @@
 
+# Persistent configuration
 config.ini
-*~
-**/build/
 
+# A library you might try to download and use and regret it
+pyfantom*/
+*.tar.gz
+*.tar
+*.zip
+
+# Not needed
+**/build/
+*.pyc
+
+# OS garbage
+.DS_Store
+*.swp
+*~

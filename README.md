@@ -5,16 +5,16 @@ Using the Lego Mindstorms NXT 2.0 Ultrasonic Sensor to play [Plink](http://labs.
 
 ## Setup
 
-Using Python 2.7.6
+Using Python 2.7, PyMouse, nxt-python-2.2.2
 
-Let me be frank, this thing is probably a pain to set up. Maybe it's not, though?
+Let me be frank, this thing is probably a pain to set up. Maybe not on linux, though?
 
 Instructions are for USB connection, but [nxt-python](https://code.google.com/p/nxt-python/wiki/Installation) also allows for Bluetooth and some kind of apparition.
 
 ### Linux
 
 ```shell
-cd nxt-python-0.7
+cd nxt-python
 sudo python setup.py install
 cd ../PyMouse
 sudo python setup.py install
@@ -26,12 +26,44 @@ That should work, more or less. I haven't exactly tested it, as such.
 
 ### Windows
 
-The libraries this uses are supposed to be cross-platform, but I haven't gotten it to work on Windows yet.
+You'll need to open up an administrative command prompt and get your hands dirty.
 
-Hmm, maybe I needed to install things from an administrative command prompt...
-Ugh, but the USB situation. It seems like you have to install libusb-win32 (none of the other ones seem to have windows support)...
-and libusb-win32 just sort of blocked even the official NXT software from connecting to the NXT and it's all like
-"The device driver can not be easily removed from the system. You can however try to use [​usbdeview](#IamNotInstallingSomethingToUninstallSomething!) to remove the entries..."
+##### PyMouse
+
+PyMouse depends on [pywin32](http://sourceforge.net/projects/pywin32/files/) and [pyHook](http://sourceforge.net/projects/pyhook/files/pyhook/).
+You can download installers for those from their project pages on SourceForge.
+Run `python` (`^Z Enter`) to see whether you have 64bit or 32bit python installed.
+Download the appropriate installers based on this.
+
+##### NXT-Python
+
+For nxt-python to work, you need to install a communication module.
+Dependencies galore.
+
+###### PyFantom
+
+I got this to work for about ten seconds after searching for, downloading, extracting and installing
+Lego's [NXT Fantom Driver](http://www.lego.com/en-us/mindstorms/downloads/nxt/nxt-fantom-driver/),
+searching for, downloading, extracting and installing PyFantom
+which says windows support is "to be determined"
+and then gives an error "Unsupported platform",
+rage-quiting,
+suspecting it's an outdated version,
+finding, downloading, extracting and installing the master version
+and updating all my code.
+
+Then it stopped working.
+
+###### PyUSB
+
+NXT-Python has it's backends and one of them is PyUSB. PyUSB has its own set of backends.
+
+Some of them seem to support Windows.
+
+...and libusb-win32 just sort of blocked even the official NXT software from connecting to the NXT and it's all like
+"The device driver can not be easily removed from the system.
+You can however try to use [​usbdeview](#IamNotInstallingSomethingToUninstallSomething!)
+to remove the entries..."
 You can however uninstall it from the "Device Manager" (without downloading additional software!)
 
 ### Mac
@@ -42,11 +74,11 @@ I don't have a mac.
 
 It's not supposed to move the mouse when you're not interacting with it, but if it goes rouge, just turn off your NXT.
 
-1. Turn on the NXT and connect it to your computer. Duh.
-1. Use `sudo python main.py`. (Without sudo I get `usb.USBError: could not set config 1: Operation not permitted`)
-1. You'll probably get a BrickNotFound error or something else. The BrickNotFound error can also mean some things aren't installed. Good luck.
-1. Connect the Ultrasonic sensor to port 4. (You'll probably want to attach it directly to the NXT brick)
-1. Calibration: Follow the instructions. If you want to use it sitting down, calibrate it by casually pointing to the top and bottom of the screen. To recalibrate, use `sudo python main.py --recalibrate`
+1. Turn on the NXT and connect it to your computer.
+2. Connect the Ultrasonic sensor to port 4. You'll probably want to attach it directly to the NXT brick.
+3. Use `sudo python main.py`. (If you don't want to use sudo, you can apparently configure some udev rules for USB access, but I haven't tried this)
+4. You'll probably get a BrickNotFound error or something else. Good luck.
+5. Calibration: Follow the instructions. If you want to use it by casually pointing, calibrate it by casually pointing. The settings are stored in `config.ini`. To recalibrate, use `sudo python main.py --recalibrate`
 
 ```
 usage: (sudo) main.py [-h] [-d {left,right,up,down}] [-r] [-c] [-b] [-w]
@@ -67,7 +99,7 @@ optional arguments:
 
 * Fully support horizontal mode
 
-	* Seperate calibration configurations
+	* Separate calibration configurations
 
 
 * Configure on-screen boundaries
@@ -78,4 +110,3 @@ optional arguments:
 
 
 * Smoothing
-
