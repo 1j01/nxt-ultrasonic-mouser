@@ -9,9 +9,9 @@ Using Python 2.7, PyMouse, nxt-python-2.2.2
 
 Let me be frank, this thing is probably a pain to set up. Maybe not on linux, though?
 
-Instructions are for USB connection, but [nxt-python](https://code.google.com/p/nxt-python/wiki/Installation) also allows for Bluetooth and some kind of apparition.
-
 ### Linux
+
+Instructions are for USB connection, but [nxt-python](https://code.google.com/p/nxt-python/wiki/Installation) also allows for Bluetooth and NXT's Fantom driver.
 
 ```shell
 cd nxt-python
@@ -38,7 +38,13 @@ Download the appropriate installers based on this.
 ##### NXT-Python
 
 For nxt-python to work, you need to install a communication module.
-Dependencies galore.
+
+###### PyBluez
+
+Bluetooth is probably the easiest method.
+Obviously it requires either a Bluetooth dongle or built-in Bluetooth functionality.
+
+Install PyBluez with `pip install pybluez` or by downloading and running their installer on PyPI.
 
 ###### PyFantom
 
